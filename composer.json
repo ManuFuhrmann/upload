@@ -9,7 +9,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ManuFuhrmann\\Upload\\": ""
+            "ManuFuhrmann\\Upload\\": "src/"
         }
     }
 }

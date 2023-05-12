@@ -1,0 +1,15 @@
+<phpunit>
+    <!-- your test suite configuration goes here -->
+    <testsuites>
+        <testsuite name="My Test Suite">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <logging>
+        <junit outputFile="tmp/phpunit/junit.xml"/>
+        <testdoxHtml outputFile="tmp/phpunit/testdox.html"/>
+    </logging>
+    <php>
+        <includePath>./vendor/autoload.php</includePath>
+    </php>
+</phpunit>
