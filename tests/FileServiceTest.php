@@ -1,7 +1,7 @@
 <?php
 
+use ManuFuhrmann\Upload\Services\FileService;
 use PHPUnit\Framework\TestCase;
-use ManuFuhrmann\Upload\FileService;
 
 class FileServiceTest extends TestCase
 {
