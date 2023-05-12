@@ -1,5 +1,5 @@
 <?php
-namespace ManuFuhrmann\Upload;
+namespace ManuFuhrmann\Upload\Services;
 
 class FileService
 {
