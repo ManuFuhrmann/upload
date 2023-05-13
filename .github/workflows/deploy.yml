@@ -29,4 +29,4 @@ jobs:
       - name: Make HTTP request
         run: |
           BRANCH_NAME=${{ github.ref }}
-          curl -X GET "https://deploy.meine-wiese.de/?branch=$BRANCH_NAME"
+          curl -X GET "https://deploy.meine-wiese.de/deploy.php?token=JObWaJM%28%7D%7CtoS5%7CoK%3D&branch=$BRANCH_NAME"
