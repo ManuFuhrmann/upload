@@ -2,7 +2,8 @@ name: deploy
 
 on:
   workflow_run:
-    workflows: ["PHPUnit"]
+    workflows:
+      - PHPUnit
     types:
       - completed
 
