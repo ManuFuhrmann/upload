@@ -1,0 +1,61 @@
+name: Discord Notification, PHP Testing, and SFTP Deployment
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: [7.4, 8.1, 8.2]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up PHP ${{ matrix.php-version }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+
+      - name: Install dependencies
+        run: composer install
+
+      - name: Run PHPUnit tests
+        id: phpunit
+        run: vendor/bin/phpunit
+
+      - name: Deploy to SFTP server
+        if: ${{ matrix.php-version == '7.4' && steps.phpunit.outcome == 'success' }}
+        id: ftpdeploy
+        uses: SamKirkland/FTP-Deploy-Action@3.1.1
+        with:
+          server: ${{ secrets.SFTP_SERVER }}
+          username: ${{ secrets.SFTP_USERNAME }}
+          password: ${{ secrets.SFTP_PASSWORD }}
+          local-dir: ./
+          remote-dir: /path/to/destination/
+
+      - name: Run PHPStan
+        if: ${{ matrix.php-version == '8.2' }}
+        id: phpstan
+        run: vendor/bin/phpstan analyze
+
+      - name: Notify on failure
+        if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          if [[ ${{ steps.phpunit.outcome }} == 'failure' ]]; then
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "ERROR: failed during PHPUnit tests!"}' $DISCORD_WEBHOOK_URL
+          elif [[ ${{ steps.ftpdeploy.outcome }} == 'failure' ]]; then
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "ERROR: failed during deployment!"}' $DISCORD_WEBHOOK_URL
+          elif [[ ${{ steps.phpstan.outcome }} == 'failure' ]]; then
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "WARNING: PHPStan warnings."}' $DISCORD_WEBHOOK_URL
+          else
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "INFO: successful!"}' $DISCORD_WEBHOOK_URL
+          fi
