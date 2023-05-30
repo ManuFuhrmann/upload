@@ -51,11 +51,11 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           if [[ ${{ steps.phpunit.outcome }} == 'failure' ]]; then
-            curl -H "Content-Type: application/json" -X POST -d '{"content": "ERROR: failed during PHPUnit tests!"}' --url "$DISCORD_WEBHOOK_URL"
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "ERROR: failed during PHPUnit tests!"}' --url $DISCORD_WEBHOOK_URL
           elif [[ ${{ steps.ftpdeploy.outcome }} == 'failure' ]]; then
-            curl -H "Content-Type: application/json" -X POST -d '{"content": "ERROR: failed during deployment!"}' --url "$DISCORD_WEBHOOK_URL"
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "ERROR: failed during deployment!"}' --url $DISCORD_WEBHOOK_URL
           elif [[ ${{ steps.phpstan.outcome }} == 'failure' ]]; then
-            curl -H "Content-Type: application/json" -X POST -d '{"content": "WARNING: PHPStan warnings."}' --url "$DISCORD_WEBHOOK_URL"
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "WARNING: PHPStan warnings."}' --url $DISCORD_WEBHOOK_URL
           else
-            curl -H "Content-Type: application/json" -X POST -d '{"content": "INFO: successful!"}' --url "$DISCORD_WEBHOOK_URL"
+            curl -H "Content-Type: application/json" -X POST -d '{"content": "INFO: successful!"}' --url $DISCORD_WEBHOOK_URL
           fi
