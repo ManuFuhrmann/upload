@@ -1,0 +1,68 @@
+name: PHP CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_PROJECT_WEBHOOK_URL: ${{ secrets.DISCORD_PROJECT_WEBHOOK_URL }}
+      SFTP_HOST: ${{ secrets.SFTP_HOST }}
+      SFTP_USER: ${{ secrets.SFTP_USER }}
+      SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+      SFTP_REMOTE_DIR: ${{ secrets.SFTP_REMOTE_DIR }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3' # specify your PHP version
+        tools: composer
+
+    - name: Install dependencies
+      run: composer install --no-progress --no-suggest
+
+    - name: Generate SCSS files
+      run: |
+        npm install -g sass # Assuming you're using the Dart Sass implementation
+        sass src/scss:public/css
+
+    - name: Run PHPUnit tests
+      run: vendor/bin/phpunit
+
+    - name: Run PHPStan
+      run: vendor/bin/phpstan analyse
+
+    - name: Check for failure
+      if: failure()
+      run: |
+        ACTOR=${{ github.actor }}
+        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"CI/CD pipeline failed. Blame @$ACTOR!\"}" $DISCORD_WEBHOOK_URL
+
+    - name: Deploy to server via SFTP
+      if: success()
+      uses: burnett01/rsync-deployments@5.0
+      with:
+        switches: -avzr --delete
+        path: ./public/
+        remote_path: ${{ env.SFTP_REMOTE_DIR }}
+        remote_host: ${{ env.SFTP_HOST }}
+        remote_user: ${{ env.SFTP_USER }}
+        remote_key: ${{ secrets.SFTP_PRIVATE_KEY }}
+
+    - name: Send success message to Discord
+      if: success()
+      run: |
+        curl -H "Content-Type: application/json" -X POST -d '{"content": "CI/CD pipeline succeeded. Great job team!"}' $DISCORD_PROJECT_WEBHOOK_URL
