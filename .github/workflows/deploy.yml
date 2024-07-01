@@ -20,36 +20,43 @@ jobs:
       SFTP_USER: ${{ secrets.SFTP_USER }}
       SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
       SFTP_REMOTE_DIR: ${{ secrets.SFTP_REMOTE_DIR }}
+      FAILED_STEP: ""
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+      env:
+        FAILED_STEP: "Checkout code"
 
     - name: Set up PHP
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.3' # specify your PHP version
         tools: composer
+      env:
+        FAILED_STEP: "Set up PHP"
 
     - name: Install dependencies
       run: composer install --no-progress --no-suggest
+      env:
+        FAILED_STEP: "Install dependencies"
 
     - name: Generate SCSS files
       run: |
         npm install -g sass # Assuming you're using the Dart Sass implementation
         sass assets/scss:public/css --style compressed
+      env:
+        FAILED_STEP: "Generate SCSS files"
 
     - name: Run PHPUnit tests
       run: vendor/bin/phpunit
+      env:
+        FAILED_STEP: "Run PHPUnit tests"
 
     - name: Run PHPStan
       run: vendor/bin/phpstan analyse
-
-    - name: Check for failure
-      if: failure()
-      run: |
-        ACTOR=${{ github.actor }}
-        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"CI/CD pipeline failed. Blame @$ACTOR!\"}" $DISCORD_BLAME_WEBHOOK_URL
+      env:
+        FAILED_STEP: "Run PHPStan"
 
     - name: Deploy to server via SFTP
       if: success()
@@ -61,6 +68,15 @@ jobs:
         remote_host: ${{ env.SFTP_HOST }}
         remote_user: ${{ env.SFTP_USER }}
         remote_key: ${{ secrets.SFTP_PRIVATE_KEY }}
+      env:
+        FAILED_STEP: "Deploy to server via SFTP"
+
+    - name: Check for failure
+      if: failure()
+      run: |
+        ACTOR=${{ github.actor }}
+        STEP=${{ env.FAILED_STEP }}
+        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"CI/CD pipeline failed at step: $STEP. Blame @$ACTOR!\"}" $DISCORD_BLAME_WEBHOOK_URL
 
     - name: Send success message to Discord
       if: success()
