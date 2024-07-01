@@ -58,6 +58,11 @@ jobs:
       env:
         FAILED_STEP: "Run PHPStan"
 
+    - name: Install lftp
+      if: success()
+      run: sudo apt-get update && sudo apt-get install -y lftp
+      env:
+        FAILED_STEP: "Install lftp"
 
     - name: Deploy to server via SFTP
       if: success()
