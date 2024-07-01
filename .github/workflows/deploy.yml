@@ -58,16 +58,15 @@ jobs:
       env:
         FAILED_STEP: "Run PHPStan"
 
-    - name: Install lftp
-      if: success()
-      run: sudo apt-get update && sudo apt-get install -y lftp
-      env:
-        FAILED_STEP: "Install lftp"
-
     - name: Deploy to server via SFTP
       if: success()
-      run: |
-        lftp -u ${{ env.SFTP_USER }},${{ env.SFTP_PASSWORD }} -e "mirror -R ./public/ ${{ env.SFTP_REMOTE_DIR }}; bye" sftp://${{ env.SFTP_HOST }}
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ env.SFTP_HOST }}
+        username: ${{ env.SFTP_USER }}
+        password: ${{ env.SFTP_PASSWORD }}
+        source: "./public/*"
+        target: ${{ env.SFTP_REMOTE_DIR }}
       env:
         FAILED_STEP: "Deploy to server via SFTP"
 
