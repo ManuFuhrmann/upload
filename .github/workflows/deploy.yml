@@ -37,7 +37,7 @@ jobs:
     - name: Generate SCSS files
       run: |
         npm install -g sass # Assuming you're using the Dart Sass implementation
-        sass src/scss:public/css
+        sass assets/scss:public/css
 
     - name: Run PHPUnit tests
       run: vendor/bin/phpunit
