@@ -54,7 +54,7 @@ jobs:
         FAILED_STEP: "Run PHPUnit tests"
 
     - name: Run PHPStan
-      run: vendor/bin/phpstan analyse
+      run: vendor/bin/phpstan analyse src
       env:
         FAILED_STEP: "Run PHPStan"
 
