@@ -65,7 +65,7 @@ jobs:
         host: ${{ env.SFTP_HOST }}
         username: ${{ env.SFTP_USER }}
         password: ${{ env.SFTP_PASSWORD }}
-        source: "./*,.git*,node_modules,tests,composer.*,phpunit.xml"
+        source: "./*,!.git*,!node_modules,!tests,!composer.*,!phpunit.xml,!.phpunit*"
         rm: true
         target: ${{ env.SFTP_REMOTE_DIR }}
       env:
