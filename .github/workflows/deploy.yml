@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_BLAME_WEBHOOK_URL: ${{ secrets.DISCORD_BLAME_WEBHOOK_URL }}
       DISCORD_PROJECT_WEBHOOK_URL: ${{ secrets.DISCORD_PROJECT_WEBHOOK_URL }}
       SFTP_HOST: ${{ secrets.SFTP_HOST }}
       SFTP_USER: ${{ secrets.SFTP_USER }}
@@ -49,7 +49,7 @@ jobs:
       if: failure()
       run: |
         ACTOR=${{ github.actor }}
-        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"CI/CD pipeline failed. Blame @$ACTOR!\"}" $DISCORD_WEBHOOK_URL
+        curl -H "Content-Type: application/json" -X POST -d "{\"content\": \"CI/CD pipeline failed. Blame @$ACTOR!\"}" $DISCORD_BLAME_WEBHOOK_URL
 
     - name: Deploy to server via SFTP
       if: success()
