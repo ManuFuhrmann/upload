@@ -58,16 +58,11 @@ jobs:
       env:
         FAILED_STEP: "Run PHPStan"
 
+
     - name: Deploy to server via SFTP
       if: success()
-      uses: burnett01/rsync-deployments@5.0
-      with:
-        switches: -avzr --delete
-        path: ./public/
-        remote_path: ${{ env.SFTP_REMOTE_DIR }}
-        remote_host: ${{ env.SFTP_HOST }}
-        remote_user: ${{ env.SFTP_USER }}
-        remote_key: ${{ secrets.SFTP_PRIVATE_KEY }}
+      run: |
+        lftp -u ${{ env.SFTP_USER }},${{ env.SFTP_PASSWORD }} -e "mirror -R ./public/ ${{ env.SFTP_REMOTE_DIR }}; bye" sftp://${{ env.SFTP_HOST }}
       env:
         FAILED_STEP: "Deploy to server via SFTP"
 
