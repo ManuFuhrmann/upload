@@ -20,7 +20,7 @@ steps:
     depends_on:
       - composer-install
     commands:
-      - ./vendor/bin/phpunit --configuration phpunit.xml
+      - vendor/bin/phpunit --configuration phpunit.xml
     when:
       event: [push, pull_request, tag]
 
@@ -30,7 +30,7 @@ steps:
     depends_on:
       - composer-install
     commands:
-      - ./vendor/bin/phpstan analyse --error-format=json --no-progress > phpstan-results.json || true
+      - vendor/bin/phpstan analyse --error-format=json --no-progress > phpstan-results.json || true
       - cat phpstan-results.json
     when:
       event: [push, pull_request, tag]
