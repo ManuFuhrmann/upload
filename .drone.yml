@@ -14,7 +14,5 @@ steps:
 
 - name: phpstan-analyse
   image: php:8
-  depends_on:
-    - phpunit-test
   commands:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
