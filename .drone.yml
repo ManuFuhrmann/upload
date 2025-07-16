@@ -16,3 +16,6 @@ steps:
   image: php:8
   commands:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
+    when:
+      status: [failure]
+      event: [push, pull_request, tag]
