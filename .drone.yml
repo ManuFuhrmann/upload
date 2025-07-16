@@ -18,6 +18,3 @@ steps:
     - phpunit-test
   commands:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
-  when:
-    status: [success]
-    event: [push, pull_request, tag]
