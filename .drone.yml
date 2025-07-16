@@ -15,4 +15,4 @@ steps:
 - name: phpstan-analyse
   image: php:8
   commands:
-  - vendor/bin/phpstan analyse --error-format=json --no-progress > phpstan-results.json
+  - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
