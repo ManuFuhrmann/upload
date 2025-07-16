@@ -6,22 +6,12 @@ steps:
   # Composer Install
   - name: composer-install
     image: composer:2
-    volumes:
-      - name: vendor
-        path: /drone/src/vendor
-      - name: composer-cache
-        path: /tmp/composer-cache
-    environment:
-      COMPOSER_CACHE_DIR: /tmp/composer-cache
     commands:
       - composer install --no-dev --optimize-autoloader --no-interaction
-
+  
   # PHPUnit Tests
   - name: phpunit-tests
-    image: php:8.2-cli
-    volumes:
-      - name: vendor
-        path: /drone/src/vendor
+    image: php:8
     depends_on:
       - composer-install
     commands:
@@ -31,10 +21,7 @@ steps:
 
   # PHPStan Analysis
   - name: phpstan-analysis
-    image: php:8.2-cli
-    volumes:
-      - name: vendor
-        path: /drone/src/vendor
+    image: php:8
     depends_on:
       - composer-install
     commands:
