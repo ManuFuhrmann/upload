@@ -10,7 +10,7 @@ steps:
 - name: phpunit-test
   image: php:8
   commands:
-  - vendor/bin/phpunit --configuration config.xml
+  - vendor/bin/phpunit --configuration phpunit.xml
 
 - name: phpstan-analyse
   image: php:8
