@@ -18,42 +18,42 @@ steps:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
 
 - name: discord-success
-    image: plugins/webhook
-    depends_on:
-      - phpunit-test
-    settings:
-      urls:
-        from_secret: discord_webhook_url
-      content_type: application/json
-      template: |
-        {
-          "content": "✅ **All checks successful**",
-          "embeds": [
-            {
-              "title": "Build #{{build.number}} - {{repo.name}}",
-              "description": "All checks successful",
-              "color": 7328346,
-              "fields": [
-                {
-                  "name": "Branch/Tag",
-                  "value": "{{build.branch}}",
-                  "inline": true
-                },
-                {
-                  "name": "Commit",
-                  "value": "[{{build.commit}}]({{build.link}})",
-                  "inline": true
-                },
-                {
-                  "name": "Author",
-                  "value": "{{build.author}}",
-                  "inline": true
-                }
-              ],
-              "timestamp": "{{datetime build.created \"2006-01-02T15:04:05Z07:00\"}}"
-            }
-          ]
-        }
-    when:
-      status: [success]
-      event: [push, pull_request, tag]
+  image: plugins/webhook
+  depends_on:
+    - phpunit-test
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "✅ **All checks successful**",
+        "embeds": [
+          {
+            "title": "Build #{{build.number}} - {{repo.name}}",
+            "description": "All checks successful",
+            "color": 7328346,
+            "fields": [
+              {
+                "name": "Branch/Tag",
+                "value": "{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "[{{build.commit}}]({{build.link}})",
+                "inline": true
+              },
+              {
+                "name": "Author",
+                "value": "{{build.author}}",
+                "inline": true
+              }
+            ],
+            "timestamp": "{{datetime build.created \"2006-01-02T15:04:05Z07:00\"}}"
+          }
+        ]
+      }
+  when:
+    status: [success]
+    event: [push, pull_request, tag]
