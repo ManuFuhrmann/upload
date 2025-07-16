@@ -1,13 +1,179 @@
 kind: pipeline
-name: test
+type: docker
+name: php-ci-cd
 
 steps:
-- name: install
-  image: composer
-  commands:
-  - composer install
+  # Composer Install
+  - name: composer-install
+    image: composer:2
+    volumes:
+      - name: composer-cache
+        path: /tmp/composer-cache
+    environment:
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+    commands:
+      - composer install --no-dev --optimize-autoloader --no-interaction
 
-- name: test
-  image: php:8
-  commands:
-  - vendor/bin/phpunit --configuration phpunit.xml
+  # PHPUnit Tests
+  - name: phpunit-tests
+    image: php:8.2-cli
+    depends_on:
+      - composer-install
+    commands:
+      - ./vendor/bin/phpunit --configuration phpunit.xml
+    when:
+      event: [push, pull_request, tag]
+
+  # PHPStan Analysis
+  - name: phpstan-analysis
+    image: php:8.2-cli
+    depends_on:
+      - composer-install
+    commands:
+      - ./vendor/bin/phpstan analyse --error-format=json --no-progress > phpstan-results.json || true
+      - cat phpstan-results.json
+    when:
+      event: [push, pull_request, tag]
+
+  # Discord Notification für PHPUnit Fehler
+  - name: discord-phpunit-failure
+    image: plugins/webhook
+    depends_on:
+      - phpunit-tests
+    settings:
+      urls:
+        from_secret: discord_webhook_url
+      content_type: application/json
+      template: |
+        {
+          "content": "❌ **PHPUnit Tests fehlgeschlagen**",
+          "embeds": [
+            {
+              "title": "Build #{{build.number}} - {{repo.name}}",
+              "description": "PHPUnit Tests sind fehlgeschlagen",
+              "color": 15158332,
+              "fields": [
+                {
+                  "name": "Branch/Tag",
+                  "value": "{{build.branch}}",
+                  "inline": true
+                },
+                {
+                  "name": "Commit",
+                  "value": "[{{build.commit}}]({{build.link}})",
+                  "inline": true
+                },
+                {
+                  "name": "Author",
+                  "value": "{{build.author}}",
+                  "inline": true
+                }
+              ],
+              "timestamp": "{{datetime build.created \"2006-01-02T15:04:05Z07:00\"}}"
+            }
+          ]
+        }
+    when:
+      status: [failure]
+      event: [push, pull_request, tag]
+
+  # Discord Notification für PHPStan Probleme
+  - name: discord-phpstan-issues
+    image: alpine:latest
+    depends_on:
+      - phpstan-analysis
+    environment:
+      DISCORD_WEBHOOK:
+        from_secret: discord_webhook_url
+    commands:
+      - apk add --no-cache curl jq
+      - |
+        if [ -f phpstan-results.json ]; then
+          ERROR_COUNT=$(jq '.totals.errors // 0' phpstan-results.json)
+          if [ "$ERROR_COUNT" -gt 0 ]; then
+            ERRORS=$(jq -r '.files | to_entries[] | .value.messages[] | "• \(.file):\(.line) - \(.message)"' phpstan-results.json | head -10)
+            curl -H "Content-Type: application/json" -d "{
+              \"content\": \"⚠️ **PHPStan hat $ERROR_COUNT Fehler gefunden**\",
+              \"embeds\": [{
+                \"title\": \"Build #$DRONE_BUILD_NUMBER - $DRONE_REPO_NAME\",
+                \"description\": \"PHPStan Analyse hat Probleme gefunden\",
+                \"color\": 16776960,
+                \"fields\": [
+                  {\"name\": \"Branch/Tag\", \"value\": \"$DRONE_BRANCH\", \"inline\": true},
+                  {\"name\": \"Commit\", \"value\": \"[$DRONE_COMMIT]($DRONE_BUILD_LINK)\", \"inline\": true},
+                  {\"name\": \"Fehler\", \"value\": \"$ERROR_COUNT\", \"inline\": true},
+                  {\"name\": \"Erste Fehler\", \"value\": \"$ERRORS\", \"inline\": false}
+                ]
+              }]
+            }" "$DISCORD_WEBHOOK"
+          fi
+        fi
+    when:
+      event: [push, pull_request, tag]
+
+  # Docker Build und Push (nur bei Tags)
+  - name: docker-build-push
+    image: plugins/docker
+    depends_on:
+      - phpunit-tests
+      - phpstan-analysis
+    settings:
+      registry: docker.io  # oder Ihre Registry
+      repo: your-username/your-app-name  # Anpassen!
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      tags:
+        - ${DRONE_TAG}
+        - latest
+      dockerfile: Dockerfile
+    when:
+      event: [tag]
+      status: [success]
+
+  # Success Notification für Tag Builds
+  - name: discord-success-tag
+    image: plugins/webhook
+    depends_on:
+      - docker-build-push
+    settings:
+      urls:
+        from_secret: discord_webhook_url
+      content_type: application/json
+      template: |
+        {
+          "content": "✅ **Tag Build erfolgreich**",
+          "embeds": [
+            {
+              "title": "Build #{{build.number}} - {{repo.name}}",
+              "description": "Tag {{build.branch}} wurde erfolgreich als Docker Container gepusht",
+              "color": 5763719,
+              "fields": [
+                {
+                  "name": "Tag",
+                  "value": "{{build.branch}}",
+                  "inline": true
+                },
+                {
+                  "name": "Docker Image",
+                  "value": "your-username/your-app-name:{{build.branch}}",
+                  "inline": true
+                },
+                {
+                  "name": "Commit",
+                  "value": "[{{build.commit}}]({{build.link}})",
+                  "inline": true
+                }
+              ],
+              "timestamp": "{{datetime build.created \"2006-01-02T15:04:05Z07:00\"}}"
+            }
+          ]
+        }
+    when:
+      event: [tag]
+      status: [success]
+
+volumes:
+  - name: composer-cache
+    temp: {}
