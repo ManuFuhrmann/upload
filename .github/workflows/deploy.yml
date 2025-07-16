@@ -58,19 +58,6 @@ jobs:
       env:
         FAILED_STEP: "Run PHPStan"
 
-    - name: Deploy to server via SFTP
-      if: success()
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ env.SFTP_HOST }}
-        username: ${{ env.SFTP_USER }}
-        password: ${{ env.SFTP_PASSWORD }}
-        source: "./*,!.git*,!node_modules,!tests,!composer.*,!phpunit.xml,!.phpunit*"
-        rm: true
-        target: ${{ env.SFTP_REMOTE_DIR }}
-      env:
-        FAILED_STEP: "Deploy to server via SFTP"
-
     - name: Check for failure
       if: failure()
       run: |
