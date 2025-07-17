@@ -18,7 +18,7 @@ steps:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
   - cat phpstan-results.json
 
-- name: discord-success-tag
+- name: discord-success
   image: plugins/webhook
   settings:
     urls:
@@ -26,11 +26,11 @@ steps:
     content_type: application/json
     template: |
       {
-        "content": "✅ **Tag Build erfolgreich**",
+        "content": "✅ **Process successful**",
         "embeds": [
           {
             "title": "Build #{{build.number}} - {{repo.name}}",
-            "description": "Tag {{build.branch}} wurde erfolgreich als Docker Container gepusht",
+            "description": "Process for branch '{{build.branch}}' was finished successfully",
             "color": 5763719,
             "fields": [
               {
@@ -54,5 +54,4 @@ steps:
         ]
       }
   when:
-    event: [tag]
     status: [success]
