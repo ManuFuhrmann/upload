@@ -72,11 +72,10 @@ steps:
               },
               {
                 "name": "Commit",
-                "value": "[{{build.commit}}]({{build.link}})",
+                "value": "{{build.commit}}",
                 "inline": true
               }
-            ],
-            "timestamp": "{{build.created}}"
+            ]
           }
         ]
       }
