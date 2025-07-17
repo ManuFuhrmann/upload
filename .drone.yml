@@ -18,6 +18,33 @@ steps:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
   - cat phpstan-results.json
 
+
+- name: discord-simple-test
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "Simple test message"
+      }
+
+- name: discord-debug
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    debug: true
+    template: |
+      {
+        "content": "DEBUG: Build {{build.number}} - {{repo.name}} - Branch: {{build.branch}}"
+      }
+  when:
+    status: [success]
+
+
 - name: discord-success
   image: plugins/webhook
   settings:
