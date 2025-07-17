@@ -17,3 +17,42 @@ steps:
   commands:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
   - cat phpstan-results.json
+
+- name: discord-success-tag
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "✅ **Tag Build erfolgreich**",
+        "embeds": [
+          {
+            "title": "Build #{{build.number}} - {{repo.name}}",
+            "description": "Tag {{build.branch}} wurde erfolgreich als Docker Container gepusht",
+            "color": 5763719,
+            "fields": [
+              {
+                "name": "Tag",
+                "value": "{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Docker Image",
+                "value": "your-username/your-app-name:{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "[{{build.commit}}]({{build.link}})",
+                "inline": true
+              }
+            ],
+            "timestamp": "{{datetime build.created \"2006-01-02T15:04:05Z07:00\"}}"
+          }
+        ]
+      }
+  when:
+    event: [tag]
+    status: [success]
