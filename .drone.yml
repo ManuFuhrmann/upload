@@ -81,7 +81,7 @@ steps:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
   - cat phpstan-results.json
   depends_on:
-  - composer-install
+  - phpstan-composer-install
 
 - name: phpstan-discord-failure
   image: plugins/webhook
@@ -124,3 +124,43 @@ steps:
     status: [failure]
   depends_on:
   - phpstan-composer-install
+
+---
+
+kind: pipeline
+name: Discord
+
+- name: discord-success
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "✅ **Process successful**",
+        "embeds": [
+          {
+            "title": "Build #{{build.number}} - {{repo.name}}",
+            "description": "Process for branch '{{build.branch}}' was finished successfully",
+            "color": 5763719,
+            "fields": [
+              {
+                "name": "Tag",
+                "value": "{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "{{build.commit}}",
+                "inline": true
+              }
+            ]
+          }
+        ]
+      }
+  when:
+    status: [success]
+  depends_on:
+  - phpunit-test
+  - phpstan-analyse
