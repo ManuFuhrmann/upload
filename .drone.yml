@@ -38,18 +38,26 @@ steps:
             "color": 15158332,
             "fields": [
               {
+                "name": "Build",
+                "value": "#{{build.number}} - {{repo.name}}",
+                "inline": true
+              },
+              {
                 "name": "Branch",
                 "value": "{{build.branch}}",
                 "inline": true
               },
               {
                 "name": "Commit",
-                "value": "{{build.commit}}",
-                "inline": true
+                "value": "{{build.commit}}"
               },
               {
                 "name": "Failed Step",
-                "value": "PHPUnit Tests",
+                "value": "PHPUnit Tests"
+              },
+              {
+                "name": "Author",
+                "value": "{{build.author}}",
                 "inline": true
               }
             ],
