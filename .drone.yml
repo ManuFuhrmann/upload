@@ -1,5 +1,5 @@
 kind: pipeline
-name: CI/CD
+name: CI-phpunit
 
 steps:
 - name: phpunit-composer-install
@@ -67,7 +67,7 @@ steps:
 ---
 
 kind: pipeline
-name: CI/CD
+name: CI-phpstan
 
 steps:
 - name: phpstan-composer-install
