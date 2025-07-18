@@ -124,3 +124,58 @@ steps:
     status: [failure]
   depends_on:
   - phpstan-composer-install
+
+---
+
+kind: pipeline
+name: discord-success
+
+depends_on:
+  - main-pipeline
+  - test-pipeline
+
+steps:
+
+- name: discord-successful
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "",
+        "embeds": [
+          {
+            "title": "✅ **CI Analyse Successful**",
+            "description": "PHPStan static analysis failed for branch '{{build.branch}}'",
+            "color": 15158332,
+            "fields": [ 
+              {
+                "name": "Build",
+                "value": "#{{build.number}} - {{repo.name}}"
+              },
+              {
+                "name": "Branch",
+                "value": "{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "{{build.commit}}",
+                "inline": true
+              },
+              {
+                "name": "Failed Step",
+                "value": "PHPStan Analysis",
+                "inline": true
+              }
+            ],
+            "footer": {
+              "text": "Check the build logs for details"
+            }
+          }
+        ]
+      }
+  when:
+    status: [success]
