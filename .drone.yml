@@ -30,10 +30,10 @@ steps:
     content_type: application/json
     template: |
       {
-        "content": "❌ **PHPUnit Tests Failed**",
+        "content": "",
         "embeds": [
           {
-            "title": "Build #{{build.number}} - {{repo.name}}",
+            "title": "❌ **PHPUnit Tests Failed**",
             "description": "PHPUnit tests failed for branch '{{build.branch}}'",
             "color": 15158332,
             "fields": [
