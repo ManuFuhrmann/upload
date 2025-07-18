@@ -35,6 +35,7 @@ steps:
       **Build:** #{{build.number}} - {{repo.name}}
       **Branch:** {{build.branch}}
       **Commit:** {{build.commit}}
+      **Author:** {{build.author}}
       
       Check the attached log file for details.
     color: "#dc3545"
