@@ -9,5 +9,6 @@ class FileServiceTest extends TestCase
     {
         $fileService = new FileService();
         $this->assertEquals('0 B', $fileService->fileSizeConvert(0));
+        $this->assertEquals('0 B', $fileService->fileSizeConvert(10));
     }
 }
