@@ -20,7 +20,9 @@ steps:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
   - cat phpstan-results.json
   depends_on:
-  - composer-install- name: discord-phpunit-failure
+  - composer-install
+
+- name: discord-phpunit-failure
   image: plugins/webhook
   settings:
     urls:
