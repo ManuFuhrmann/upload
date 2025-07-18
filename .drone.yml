@@ -25,8 +25,10 @@ steps:
 - name: discord-phpunit-failure
   image: appleboy/drone-discord
   settings:
-    webhook:
-      from_secret: discord_webhook_url
+    webhook_id:
+      from_secret: discord_webhook_id
+    webhook_token:
+      from_secret: discord_webhook_token
     message: |
       ❌ **PHPUnit Tests Failed**
       
