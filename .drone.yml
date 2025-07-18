@@ -23,42 +23,19 @@ steps:
   - composer-install
 
 - name: discord-phpunit-failure
-  image: plugins/webhook
+  image: appleboy/drone-discord
   settings:
-    urls:
+    webhook:
       from_secret: discord_webhook_url
-    content_type: application/json
-    template: |
-      {
-        "content": "❌ **PHPUnit Tests Failed**",
-        "embeds": [
-          {
-            "title": "Build #{{build.number}} - {{repo.name}}",
-            "description": "PHPUnit tests failed for branch '{{build.branch}}'",
-            "color": 15158332,
-            "fields": [
-              {
-                "name": "Branch",
-                "value": "{{build.branch}}",
-                "inline": true
-              },
-              {
-                "name": "Commit",
-                "value": "{{build.commit}}",
-                "inline": true
-              },
-              {
-                "name": "Failed Step",
-                "value": "PHPUnit Tests",
-                "inline": true
-              }
-            ],
-            "footer": {
-              "text": "Check the build logs for details"
-            }
-          }
-        ]
-      }
+    message: |
+      ❌ **PHPUnit Tests Failed**
+      
+      **Build:** #{{build.number}} - {{repo.name}}
+      **Branch:** {{build.branch}}
+      **Commit:** {{build.commit}}
+      
+      Check the attached log file for details.
+    color: "#dc3545"
   when:
     status: [failure]
   depends_on:
