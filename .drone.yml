@@ -20,7 +20,89 @@ steps:
   - vendor/bin/phpstan analyse src --error-format=json --no-progress > phpstan-results.json
   - cat phpstan-results.json
   depends_on:
-  - composer-install
+  - composer-install- name: discord-phpunit-failure
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "❌ **PHPUnit Tests Failed**",
+        "embeds": [
+          {
+            "title": "Build #{{build.number}} - {{repo.name}}",
+            "description": "PHPUnit tests failed for branch '{{build.branch}}'",
+            "color": 15158332,
+            "fields": [
+              {
+                "name": "Branch",
+                "value": "{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "{{build.commit}}",
+                "inline": true
+              },
+              {
+                "name": "Failed Step",
+                "value": "PHPUnit Tests",
+                "inline": true
+              }
+            ],
+            "footer": {
+              "text": "Check the build logs for details"
+            }
+          }
+        ]
+      }
+  when:
+    status: [failure]
+  depends_on:
+  - phpunit-test
+
+- name: discord-phpstan-failure
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "❌ **PHPStan Analysis Failed**",
+        "embeds": [
+          {
+            "title": "Build #{{build.number}} - {{repo.name}}",
+            "description": "PHPStan static analysis failed for branch '{{build.branch}}'",
+            "color": 15158332,
+            "fields": [
+              {
+                "name": "Branch",
+                "value": "{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "{{build.commit}}",
+                "inline": true
+              },
+              {
+                "name": "Failed Step",
+                "value": "PHPStan Analysis",
+                "inline": true
+              }
+            ],
+            "footer": {
+              "text": "Check the build logs for details"
+            }
+          }
+        ]
+      }
+  when:
+    status: [failure]
+  depends_on:
+  - phpstan-analyse
 
 - name: discord-success
   image: plugins/webhook
