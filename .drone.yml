@@ -147,11 +147,9 @@ steps:
   image: alpine:latest
   commands:
   - |
-    # Tag bereinigen (v prefix entfernen)
     CLEAN_TAG=${DRONE_TAG#v}
     echo "CLEAN_TAG=$CLEAN_TAG" > .env
     
-    # Prüfen ob es ein Release-Tag ist (nicht pre-release)
     if echo "$CLEAN_TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
       echo "IS_RELEASE=true" >> .env
       echo "This is a release version"
@@ -159,3 +157,38 @@ steps:
       echo "IS_RELEASE=false" >> .env
       echo "This is a pre-release version"
     fi
+
+- name: build-and-push
+  image: plugins/docker
+  settings:
+    registry: docker.io
+    repo: dein-username/dein-app
+    auto_tag: true
+    auto_tag_suffix: ${DRONE_COMMIT_SHA:0:7}
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+  when:
+    event: tag
+
+- name: push-latest
+  image: plugins/docker  
+  settings:
+    registry: docker.io
+    repo: dein-username/dein-app
+    tags: latest
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+  commands:
+  - |
+    source .env
+    if [ "$IS_RELEASE" != "true" ]; then
+      echo "⏭️ Skipping latest for pre-release"
+      exit 0
+    fi
+    echo "🚀 Pushing latest tag"
+  when:
+    event: tag
