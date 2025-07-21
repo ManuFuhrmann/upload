@@ -135,11 +135,64 @@ steps:
 kind: pipeline
 name: CD-push
 
-steps:
-- name: phpstan-composer-install
-  image: composer
-  commands:
-  - composer install
 depends_on:
 - CI-phpunit
 - CI-phpstan
+
+trigger:
+  event:
+    - tag
+
+steps:
+- name: determine-tags
+  image: alpine:latest
+  commands:
+  - |
+    # Tag bereinigen (v prefix entfernen)
+    CLEAN_TAG=${DRONE_TAG#v}
+    echo "CLEAN_TAG=$CLEAN_TAG" > .env
+    
+    # Prüfen ob es ein Release-Tag ist (nicht pre-release)
+    if echo "$CLEAN_TAG" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+      echo "IS_RELEASE=true" >> .env
+      echo "This is a release version"
+    else
+      echo "IS_RELEASE=false" >> .env
+      echo "This is a pre-release version"
+    fi
+
+- name: build-and-push
+  image: plugins/docker
+  settings:
+    registry: docker.io
+    repo: dein-username/dein-app
+    username:
+      from_secret: docker_username
+    password:
+      from_secret: docker_password
+  commands:
+  - |
+    source .env
+    
+    # Basis Tags
+    TAGS="$CLEAN_TAG,$CLEAN_TAG-${DRONE_COMMIT_SHA:0:7}"
+    
+    # Latest nur bei Release-Versionen
+    if [ "$IS_RELEASE" = "true" ]; then
+      TAGS="$TAGS,latest"
+      echo "✅ Adding latest tag"
+    else
+      echo "ℹ️ Pre-release, no latest tag"
+    fi
+    
+    echo "Final tags: $TAGS"
+    
+    # Docker build und push
+    docker build -t temp-image .
+    
+    IFS=',' read -ra TAG_ARRAY <<< "$TAGS"
+    for tag in "${TAG_ARRAY[@]}"; do
+      docker tag temp-image "dein-username/dein-app:$tag"
+      docker push "dein-username/dein-app:$tag"
+      echo "✅ Pushed: dein-username/dein-app:$tag"
+    done
