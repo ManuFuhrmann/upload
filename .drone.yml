@@ -133,7 +133,7 @@ steps:
 ---
 
 kind: pipeline
-name: CI-phpstan
+name: CD-push
 
 steps:
 - name: phpstan-composer-install
