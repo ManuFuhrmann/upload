@@ -128,3 +128,18 @@ steps:
     status: [failure]
   depends_on:
   - phpstan-composer-install
+
+
+---
+
+kind: pipeline
+name: CI-phpstan
+
+steps:
+- name: phpstan-composer-install
+  image: composer
+  commands:
+  - composer install
+depends_on:
+- CI-phpunit
+- CI-phpstan
