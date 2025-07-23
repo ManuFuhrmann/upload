@@ -17,26 +17,23 @@ class FileService
      * @param $bytes
      * @return string
      */
-    public function fileSizeConvert($bytes)
+    public function fileSizeConvert($bytes): string
     {
-        $bytes = floatval($bytes);
-        $arBytes = array(
-            "B",
-            "KB",
-            "MB",
-            "GB",
-            "TB",
-        );
-
-        foreach ($arBytes as $key => $byte) {
-            if ($bytes >= pow(1024, $key)) {
-                $result = $bytes / pow(1024, $key);
-                $result = str_replace(".", ",", strval(round($result, 2))) . " " . $byte;
-                break;
-            } elseif ($bytes == 0) {
-                $result = '0 B';
-            }
+        if ($bytes === 0) {
+            return '0 B';
         }
-        return $result;
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $i = floor(log($bytes, 1024));
+        $value = $bytes / pow(1024, $i);
+
+        // Format auf Deutsch: Komma statt Punkt
+        if ($i == 0) {
+            $formatted = $value;
+        } else {
+            $formatted = number_format($value, 2, ',', '');
+        }
+
+        return $formatted . ' ' . $units[$i];
     }
 }
