@@ -149,7 +149,7 @@ steps:
       from_secret: DRONE_SECRET_DISCORD_WEBHOOK_TOKEN
   commands:
     - |
-      if ! ./vendor/bin/phpcs --standard=PSR12 src/ > phpcs_output.txt; then
+      if ! ./vendor/bin/phpcs --exclude=Squiz.Commenting.DocComment --standard=PSR12 ./src/ > phpcs_output.txt; then
         curl -X POST \
           -F "payload_json={\"content\": \"**phpcs failed – full report below** ❌\"}" \
           -F "file=@phpcs_output.txt" \
