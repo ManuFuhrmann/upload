@@ -140,59 +140,22 @@ steps:
   commands:
   - composer install
 
-- name: phpcs-analyse
+- name: run phpcs and notify if failed
   image: php:8
+  environment:
+    DISCORD_WEBHOOK_ID:
+      from_secret: DRONE_SECRET_DISCORD_WEBHOOK_ID
+    DISCORD_WEBHOOK_TOKEN:
+      from_secret: DRONE_SECRET_DISCORD_WEBHOOK_TOKEN
   commands:
-  - vendor/bin/phpcs ./src/
-  - cat phpstan-results.json
-  depends_on:
-  - phpcs-composer-install
-
-- name: phpcs-discord-failure
-  image: plugins/webhook
-  settings:
-    urls:
-      from_secret: discord_webhook_url
-    content_type: application/json
-    template: |
-      {
-        "content": "",
-        "embeds": [
-          {
-            "title": "❌ **PHP-CodeSniffer Analysis Failed**",
-            "description": "PHP-CodeSniffer static analysis failed for branch '{{build.branch}}'",
-            "color": 15158332,
-            "fields": [
-              {
-                "name": "Build",
-                "value": "#{{build.number}} - {{repo.name}}"
-              },
-              {
-                "name": "Branch",
-                "value": "{{build.branch}}",
-                "inline": true
-              },
-              {
-                "name": "Commit",
-                "value": "{{build.commit}}",
-                "inline": true
-              },
-              {
-                "name": "Failed Step",
-                "value": "PHP-CodeSniffer Analysis",
-                "inline": true
-              }
-            ],
-            "footer": {
-              "text": "Check the build logs for details"
-            }
-          }
-        ]
-      }
-  when:
-    status: [failure]
-  depends_on:
-  - phpcs-composer-install
+    - |
+      if ! ./vendor/bin/phpcs --standard=PSR12 src/ > phpcs_output.txt; then
+        curl -X POST \
+          -F "payload_json={\"content\": \"**phpcs failed – full report below** ❌\"}" \
+          -F "file=@phpcs_output.txt" \
+          https://discord.com/api/webhooks/${DISCORD_WEBHOOK_ID}/${DISCORD_WEBHOOK_TOKEN}
+        exit 1
+      fi
 
 ---
 
