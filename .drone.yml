@@ -132,6 +132,71 @@ steps:
 ---
 
 kind: pipeline
+name: CI-phpcs
+
+steps:
+- name: phpcs-composer-install
+  image: composer
+  commands:
+  - composer install
+
+- name: phpcs-analyse
+  image: php:8
+  commands:
+  - vendor/bin/phpcs ./src/
+  - cat phpstan-results.json
+  depends_on:
+  - phpcs-composer-install
+
+- name: phpcs-discord-failure
+  image: plugins/webhook
+  settings:
+    urls:
+      from_secret: discord_webhook_url
+    content_type: application/json
+    template: |
+      {
+        "content": "",
+        "embeds": [
+          {
+            "title": "❌ **PHP-CodeSniffer Analysis Failed**",
+            "description": "PHP-CodeSniffer static analysis failed for branch '{{build.branch}}'",
+            "color": 15158332,
+            "fields": [
+              {
+                "name": "Build",
+                "value": "#{{build.number}} - {{repo.name}}"
+              },
+              {
+                "name": "Branch",
+                "value": "{{build.branch}}",
+                "inline": true
+              },
+              {
+                "name": "Commit",
+                "value": "{{build.commit}}",
+                "inline": true
+              },
+              {
+                "name": "Failed Step",
+                "value": "PHP-CodeSniffer Analysis",
+                "inline": true
+              }
+            ],
+            "footer": {
+              "text": "Check the build logs for details"
+            }
+          }
+        ]
+      }
+  when:
+    status: [failure]
+  depends_on:
+  - phpcs-composer-install
+
+---
+
+kind: pipeline
 name: CD-push
 
 depends_on:
